@@ -9,9 +9,8 @@ import requests
 from uuid import uuid4
 from urllib.parse import urlparse
 
+
 # Part 1 - Building a Blockchain
-
-
 class Blockchain:
     def __init__(self):
         self.chain = []
@@ -99,9 +98,8 @@ class Blockchain:
             return True
         return False
 
+
 # Part 2 - Mining our Blockchain
-
-
 # Creating a Web App
 app = Flask(__name__)
 
@@ -111,8 +109,6 @@ node_address = str(uuid4()).replace('-', '')
 # Create a blockchain
 blockchain = Blockchain()
 
-# Create functions
-
 
 # Mining a new block
 @app.route('/mine_block', methods=['GET'])
@@ -121,14 +117,17 @@ def mine_block():
     previous_proof = previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    block = blockchain.create_block(proof, previous_hash)
 
+    blockchain.add_transaction(sender=node_address, receiver='me', amount=1)
+
+    block = blockchain.create_block(proof, previous_hash)
     response = {
         'message': 'Contratulations, you just mined a block!',
         'index': block['index'],
         'timestamp': block['timestamp'],
         'proof': block['proof'],
         'previous_hash': block['previous_hash'],
+        'transactions': block['transactions']
     }
     return jsonify(response), 200
 
@@ -146,7 +145,24 @@ def is_valid():
     response = {'is_chain_valid': blockchain.is_chain_valid(blockchain.chain)}
     return jsonify(response), 200
 
+
+# Adding a new transaction to the blockchain
+@app.route('/add_transaction', methods=['POST'])
+def add_transaction():
+    json = request.get_json()
+    transaction_keys = ['sender', 'receiver', 'amount']
+    if not all(key in json for key in transaction_keys):
+        return 'Some elements of the transaction are missing', 400
+    index = blockchain.add_transaction(
+        json['sender'], json['receiver'], json['amount'])
+    response = {'message': f'This transaction will be added to Block {index}'}
+    return jsonify(response), 201
+
+
 # Part 3 - Decentralizing our Blockchain
+
+
+
 
 
 # Running the app
